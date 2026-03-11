@@ -77,7 +77,7 @@ All configs in `/opt/watercooler/`. Daemon watches them — no restart needed.
 
 ## Web UI
 
-Open `index.html` (or host on GitHub Pages) to pick RGB colors visually. Generates CLI commands you paste via SSH.
+Open [https://anvme.github.io/watercooler-xmg-neo-linux/](https://anvme.github.io/watercooler-xmg-neo-linux/)   to pick RGB colors visually. Generates CLI commands you paste via SSH.
 
 ## Logs
 
