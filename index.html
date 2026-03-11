@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Water Cooler RGB Control</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr@1.9.1/dist/themes/monolith.min.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+
+                <div class="text-center mb-4">
+                    <h1 class="h3"><i class="bi bi-droplet-fill me-2"></i>Water Cooler RGB</h1>
+                    <p class="text-body-secondary">Pick a color and mode, get the command.</p>
+
+                    <svg id="cooler-viz" viewBox="0 0 320 250" width="320" height="250" class="my-3">
+                        <defs>
+                            <radialGradient id="glow">
+                                <stop offset="0%" stop-color="rgb(255,0,0)" stop-opacity="0.6"/>
+                                <stop offset="70%" stop-color="rgb(255,0,0)" stop-opacity="0.15"/>
+                                <stop offset="100%" stop-color="rgb(255,0,0)" stop-opacity="0"/>
+                            </radialGradient>
+                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <circle cx="5" cy="5" r="1.5" fill="rgb(255,0,0)" opacity="0.7"/>
+                            </pattern>
+                            <clipPath id="fan-clip">
+                                <circle cx="100" cy="115" r="62"/>
+                            </clipPath>
+                        </defs>
+
+                        <!-- === Liquid tubes going right from top of cooler === -->
+                        <!-- Tube 1 (supply) -->
+                        <path d="M170,40 C200,40 210,35 240,35" fill="none" stroke="#555" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M170,40 C200,40 210,35 240,35" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Tube 2 (return) -->
+                        <path d="M170,55 C200,55 210,50 240,50" fill="none" stroke="#555" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M170,55 C200,55 210,50 240,50" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Liquid flow dots animated -->
+                        <circle r="2" fill="#4af">
+                            <animateMotion dur="2s" repeatCount="indefinite" path="M170,40 C200,40 210,35 240,35"/>
+                        </circle>
+                        <circle r="2" fill="#4af">
+                            <animateMotion dur="2s" repeatCount="indefinite" begin="1s" path="M170,40 C200,40 210,35 240,35"/>
+                        </circle>
+                        <circle r="2" fill="#f44">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" path="M240,50 C210,50 200,55 170,55"/>
+                        </circle>
+                        <circle r="2" fill="#f44">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.2s" path="M240,50 C210,50 200,55 170,55"/>
+                        </circle>
+
+                        <!-- === Cooler body === -->
+                        <rect x="15" y="20" width="170" height="200" rx="12" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+                        <!-- Angled top-left accent -->
+                        <polygon points="15,60 15,20 55,20" fill="#222" stroke="#333" stroke-width="1"/>
+
+                        <!-- === Liquid level triangle indicator (inside body, top area) === -->
+                        <g id="liquid-level">
+                            <!-- Triangle outline -->
+                            <polygon points="150,32 170,32 160,62" fill="none" stroke="#555" stroke-width="1"/>
+                            <!-- Liquid fill (bottom portion of triangle, animated) -->
+                            <clipPath id="level-clip">
+                                <polygon points="150,32 170,32 160,62"/>
+                            </clipPath>
+                            <rect id="liquid-fill" x="148" y="40" width="24" height="24" fill="#4af" opacity="0.8" clip-path="url(#level-clip)"/>
+                        </g>
+                        <!-- Angled bottom-right accent -->
+                        <polygon points="185,180 185,220 145,220" fill="#222" stroke="#333" stroke-width="1"/>
+
+                        <!-- Fan glow -->
+                        <circle id="fan-glow" cx="100" cy="115" r="80" fill="url(#glow)"/>
+                        <!-- Fan grill dots -->
+                        <circle cx="100" cy="115" r="62" fill="url(#grid)" clip-path="url(#fan-clip)"/>
+                        <!-- Fan ring -->
+                        <circle cx="100" cy="115" r="62" fill="none" stroke="rgb(255,0,0)" stroke-width="2" opacity="0.5" id="fan-ring"/>
+                        <!-- Center hub -->
+                        <circle cx="100" cy="115" r="12" fill="#111" stroke="#333" stroke-width="1.5"/>
+                        <!-- Fan blades (rotating) -->
+                        <g id="fan-blades" transform-origin="100 115">
+                            <path d="M100,115 Q85,90 100,55" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                            <path d="M100,115 Q125,95 145,85" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                            <path d="M100,115 Q130,125 150,145" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                            <path d="M100,115 Q110,145 100,175" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                            <path d="M100,115 Q75,140 55,145" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                            <path d="M100,115 Q70,105 50,85" fill="none" stroke="#444" stroke-width="2" opacity="0.6"/>
+                        </g>
+
+                        <!-- Top LED strip -->
+                        <rect id="led-top" x="55" y="24" width="90" height="3" rx="1.5" fill="rgb(255,0,0)" opacity="0.8"/>
+                        <!-- Bottom LED strip -->
+                        <rect id="led-bottom" x="55" y="213" width="90" height="3" rx="1.5" fill="rgb(255,0,0)" opacity="0.8"/>
+
+                        <!-- === Power button on left side (thin line) === -->
+                        <g id="power-btn" cursor="pointer">
+                            <rect x="10" y="145" width="4" height="20" rx="2" fill="#222" stroke="#444" stroke-width="0.5"/>
+                            <rect id="power-led" x="10" y="145" width="4" height="20" rx="2" fill="#08f" opacity="0.6"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-stars me-2"></i>Mode</h5>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="rgb-mode" id="mode-static" value="static" checked>
+                            <label class="btn btn-outline-light" for="mode-static">Static</label>
+
+                            <input type="radio" class="btn-check" name="rgb-mode" id="mode-breathe" value="breathe">
+                            <label class="btn btn-outline-light" for="mode-breathe">Breathe</label>
+
+                            <input type="radio" class="btn-check" name="rgb-mode" id="mode-rainbow" value="rainbow">
+                            <label class="btn btn-outline-light" for="mode-rainbow">Rainbow</label>
+
+                            <input type="radio" class="btn-check" name="rgb-mode" id="mode-breathe-rainbow" value="breathe-rainbow">
+                            <label class="btn btn-outline-light" for="mode-breathe-rainbow">Breathe Rainbow</label>
+
+                            <input type="radio" class="btn-check" name="rgb-mode" id="mode-off" value="off">
+                            <label class="btn btn-outline-danger" for="mode-off">Off</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4" id="color-card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-palette-fill me-2"></i>Color</h5>
+
+                        <div class="d-flex justify-content-center mb-3">
+                            <div id="color-picker"></div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">R</span>
+                                    <input type="number" id="input-r" class="form-control" min="0" max="255" value="255">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">G</span>
+                                    <input type="number" id="input-g" class="form-control" min="0" max="255" value="0">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">B</span>
+                                    <input type="number" id="input-b" class="form-control" min="0" max="255" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="text-body-secondary mb-2">Presets</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-light btn-sm" data-color="0,255,255">Cyan</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="0,170,255">Ice Blue</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="0,255,0">Razer Green</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="122,0,255">Purple</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="255,0,255">Hot Pink</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="255,102,0">Orange</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="255,68,102">Coral</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="255,0,0">Red</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="0,0,255">Blue</button>
+                            <button class="btn btn-outline-light btn-sm" data-color="255,255,255">White</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-terminal-fill me-2"></i>Command</h5>
+                        <p class="text-body-secondary small mb-2">Pick mode + color above, copy and run via SSH. Saves to config — daemon applies automatically.</p>
+                        <div class="input-group">
+                            <input type="text" id="command-output" class="form-control form-control-lg font-monospace" readonly>
+                            <button class="btn btn-outline-light" id="btn-copy" title="Copy">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div id="copy-toast" class="form-text text-success d-none">Copied!</div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-lightbulb-off-fill me-2"></i>Quick Actions</h5>
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <button class="btn btn-outline-warning flex-fill" id="btn-rainbow">
+                                <i class="bi bi-rainbow me-1"></i>Rainbow
+                            </button>
+                            <button class="btn btn-outline-danger flex-fill" id="btn-off">
+                                <i class="bi bi-power me-1"></i>RGB Off
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-info-circle-fill me-2"></i>How to use</h5>
+                        <ol class="small mb-3">
+                            <li>Install on your Linux server: <code>sudo bash install.sh</code></li>
+                            <li>Enable daemon on boot: <code>sudo systemctl enable --now watercooler</code></li>
+                            <li>Pick mode + color above, copy the command</li>
+                            <li>Run via SSH — saves to <code>/opt/watercooler/rgb.conf</code></li>
+                            <li>Daemon picks up changes automatically (no restart needed)</li>
+                        </ol>
+                        <h6 class="text-body-secondary mb-2">All Commands</h6>
+                        <div class="font-monospace small">
+                            <p class="mb-1 text-body-secondary"># Scan for BT devices</p>
+                            <p class="mb-2">watercooler scan</p>
+                            <p class="mb-1 text-body-secondary"># Pump control (voltage: 7, 8, 11, 12)</p>
+                            <p class="mb-2">watercooler pump --voltage 8</p>
+                            <p class="mb-1 text-body-secondary"># Speed: auto (default), max, or manual</p>
+                            <p class="mb-2">watercooler speed --auto</p>
+                            <p class="mb-2">watercooler speed --max</p>
+                            <p class="mb-2">watercooler speed --fan 75 --pump-voltage 11</p>
+                            <p class="mb-1 text-body-secondary"># RGB with custom hex color</p>
+                            <p class="mb-2">watercooler rgb --hex #ff00aa --mode static</p>
+                            <p class="mb-1 text-body-secondary"># Check CPU temp + current tier</p>
+                            <p class="mb-2">watercooler temp</p>
+                            <p class="mb-1 text-body-secondary"># Enable daemon on boot</p>
+                            <p class="mb-0">sudo systemctl enable --now watercooler</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-center text-body-secondary mt-4 small">
+                    Works with XMG Oasis, Eluktronics LPP, PC Specialist, TUXEDO Aquaris
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr@1.9.1/dist/pickr.min.js"></script>
+    <script>
+        const inputR = document.getElementById('input-r');
+        const inputG = document.getElementById('input-g');
+        const inputB = document.getElementById('input-b');
+        const cmdOutput = document.getElementById('command-output');
+
+        let currentR = 255, currentG = 0, currentB = 0;
+
+        const pickr = Pickr.create({
+            el: '#color-picker',
+            theme: 'monolith',
+            default: '#ff0000',
+            components: {
+                preview: true,
+                hue: true,
+                interaction: {
+                    input: true
+                }
+            }
+        });
+
+        // SVG elements for cooler visualization
+        const fanRing = document.getElementById('fan-ring');
+        const fanBlades = document.getElementById('fan-blades');
+        const ledTop = document.getElementById('led-top');
+        const ledBottom = document.getElementById('led-bottom');
+        const glowStops = document.querySelectorAll('#glow stop');
+        const gridDots = document.querySelector('#grid circle');
+        const powerLed = document.getElementById('power-led');
+        const powerBtn = document.getElementById('power-btn');
+        const liquidFill = document.getElementById('liquid-fill');
+        let fanAngle = 0;
+        let rainbowHue = 0;
+        let breatheDir = 1;
+        let breatheOpacity = 1;
+        let coolerOn = true;
+        let liquidWobble = 0;
+
+        function updateCoolerViz(r, g, b, opacity) {
+            const c = `rgb(${r},${g},${b})`;
+            const o = opacity !== undefined ? opacity : 1;
+            glowStops[0].setAttribute('stop-color', c);
+            glowStops[0].setAttribute('stop-opacity', 0.6 * o);
+            glowStops[1].setAttribute('stop-color', c);
+            glowStops[1].setAttribute('stop-opacity', 0.15 * o);
+            gridDots.setAttribute('fill', c);
+            gridDots.setAttribute('opacity', 0.7 * o);
+            fanRing.setAttribute('stroke', c);
+            fanRing.setAttribute('opacity', 0.5 * o);
+            ledTop.setAttribute('fill', c);
+            ledTop.setAttribute('opacity', 0.8 * o);
+            ledBottom.setAttribute('fill', c);
+            ledBottom.setAttribute('opacity', 0.8 * o);
+            liquidFill.setAttribute('opacity', 0.8 * o);
+        }
+
+        function setCoolerOff() {
+            updateCoolerViz(0, 0, 0, 0);
+            powerLed.setAttribute('fill', '#600');
+            powerLed.setAttribute('opacity', '0.3');
+            liquidFill.setAttribute('opacity', '0.2');
+            document.querySelectorAll('#cooler-viz animateMotion').forEach(a => {
+                a.parentElement.setAttribute('opacity', '0');
+            });
+        }
+
+        function setCoolerOnState() {
+            powerLed.setAttribute('fill', '#08f');
+            powerLed.setAttribute('opacity', '0.9');
+            document.querySelectorAll('#cooler-viz animateMotion').forEach(a => {
+                a.parentElement.setAttribute('opacity', '1');
+            });
+            updateCoolerViz(currentR, currentG, currentB);
+        }
+
+        powerBtn.addEventListener('click', () => {
+            coolerOn = !coolerOn;
+            if (coolerOn) {
+                setCoolerOnState();
+            } else {
+                setCoolerOff();
+            }
+        });
+
+        function hslToRgb(h, s, l) {
+            const a = s * Math.min(l, 1 - l);
+            const f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); };
+            return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
+        }
+
+        function animateCooler() {
+            if (!coolerOn) {
+                requestAnimationFrame(animateCooler);
+                return;
+            }
+
+            fanAngle = (fanAngle + 2) % 360;
+            fanBlades.setAttribute('transform', `rotate(${fanAngle} 100 115)`);
+
+            // Liquid level wobble
+            liquidWobble += 0.05;
+            const wobbleY = 40 + Math.sin(liquidWobble) * 1.5;
+            liquidFill.setAttribute('y', wobbleY);
+
+            const mode = getMode();
+            if (mode === 'off') {
+                requestAnimationFrame(animateCooler);
+                return;
+            }
+            if (mode === 'rainbow' || mode === 'breathe-rainbow') {
+                rainbowHue = (rainbowHue + 1) % 360;
+                const [r, g, b] = hslToRgb(rainbowHue, 1, 0.5);
+                if (mode === 'breathe-rainbow') {
+                    breatheOpacity += 0.015 * breatheDir;
+                    if (breatheOpacity >= 1) { breatheOpacity = 1; breatheDir = -1; }
+                    if (breatheOpacity <= 0.1) { breatheOpacity = 0.1; breatheDir = 1; }
+                    updateCoolerViz(r, g, b, breatheOpacity);
+                } else {
+                    updateCoolerViz(r, g, b);
+                }
+            } else if (mode === 'breathe') {
+                breatheOpacity += 0.015 * breatheDir;
+                if (breatheOpacity >= 1) { breatheOpacity = 1; breatheDir = -1; }
+                if (breatheOpacity <= 0.1) { breatheOpacity = 0.1; breatheDir = 1; }
+                updateCoolerViz(currentR, currentG, currentB, breatheOpacity);
+            }
+
+            requestAnimationFrame(animateCooler);
+        }
+        requestAnimationFrame(animateCooler);
+
+        function setColor(r, g, b, updatePickr) {
+            currentR = Math.max(0, Math.min(255, Math.round(r)));
+            currentG = Math.max(0, Math.min(255, Math.round(g)));
+            currentB = Math.max(0, Math.min(255, Math.round(b)));
+            inputR.value = currentR;
+            inputG.value = currentG;
+            inputB.value = currentB;
+            if (updatePickr) {
+                pickr.setColor(`rgb(${currentR},${currentG},${currentB})`);
+            }
+            updateCoolerViz(currentR, currentG, currentB);
+            updateCommand();
+        }
+
+        function getMode() {
+            const checked = document.querySelector('input[name="rgb-mode"]:checked');
+            return checked ? checked.value : 'static';
+        }
+
+        function updateCommand() {
+            const mode = getMode();
+            if (mode === 'off') {
+                cmdOutput.value = 'watercooler rgb --off';
+            } else if (mode === 'rainbow' || mode === 'breathe-rainbow') {
+                cmdOutput.value = `watercooler rgb --mode ${mode}`;
+            } else {
+                const hex = '#' + [currentR, currentG, currentB]
+                    .map(v => v.toString(16).padStart(2, '0')).join('');
+                cmdOutput.value = `watercooler rgb --hex ${hex} --mode ${mode}`;
+            }
+        }
+
+        pickr.on('change', (color) => {
+            const rgb = color.toRGBA();
+            setColor(rgb[0], rgb[1], rgb[2], false);
+        });
+
+        [inputR, inputG, inputB].forEach(input => {
+            input.addEventListener('input', () => {
+                setColor(
+                    parseInt(inputR.value) || 0,
+                    parseInt(inputG.value) || 0,
+                    parseInt(inputB.value) || 0,
+                    true
+                );
+            });
+        });
+
+        document.querySelectorAll('[data-color]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const [r, g, b] = btn.dataset.color.split(',').map(Number);
+                setColor(r, g, b, true);
+            });
+        });
+
+        const colorCard = document.getElementById('color-card');
+
+        function setRgbOff() {
+            updateCoolerViz(0, 0, 0, 0);
+        }
+
+        function updateColorCardVisibility() {
+            const mode = getMode();
+            const needsColor = (mode === 'static' || mode === 'breathe');
+            colorCard.classList.toggle('d-none', !needsColor);
+            if (mode === 'off') {
+                setRgbOff();
+            } else {
+                updateCoolerViz(currentR, currentG, currentB);
+            }
+        }
+
+        document.querySelectorAll('input[name="rgb-mode"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                breatheOpacity = 1;
+                breatheDir = 1;
+                updateColorCardVisibility();
+                updateCommand();
+            });
+        });
+
+        document.getElementById('btn-rainbow').addEventListener('click', () => {
+            document.getElementById('mode-rainbow').checked = true;
+            updateColorCardVisibility();
+            updateCommand();
+        });
+
+        document.getElementById('btn-off').addEventListener('click', () => {
+            document.getElementById('mode-off').checked = true;
+            updateColorCardVisibility();
+            updateCommand();
+        });
+
+        document.getElementById('btn-copy').addEventListener('click', () => {
+            navigator.clipboard.writeText(cmdOutput.value);
+            const toast = document.getElementById('copy-toast');
+            toast.classList.remove('d-none');
+            setTimeout(() => toast.classList.add('d-none'), 1500);
+        });
+
+        updateCommand();
+    </script>
+</body>
+</html>

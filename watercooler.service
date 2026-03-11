@@ -1,0 +1,18 @@
+[Unit]
+Description=Water Cooler Auto Speed Daemon
+After=bluetooth.target
+Wants=bluetooth.target
+
+[Service]
+Type=simple
+ExecStart=/opt/watercooler/venv/bin/python3 /opt/watercooler/watercooler.py daemon
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Bluetooth needs dbus access
+Environment=DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+
+[Install]
+WantedBy=multi-user.target
