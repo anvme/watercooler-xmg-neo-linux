@@ -8,7 +8,7 @@ Also compatible with: Eluktronics Liquid Pad Pro, PC Specialist Liquid Series, T
 
 ```bash
 git clone https://github.com/anvme/watercooler-xmg-neo-linux
-cd cli-control
+cd watercooler-xmg-neo-linux
 sudo bash install.sh
 ```
 
